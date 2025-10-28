@@ -174,7 +174,7 @@ export default function DashboardPage() {
                   >
                     Ver resultado →
                   </Button>
-                  <Button
+                  {/* <Button
                     size="sm"
                     variant="outline"
                     className="w-full text-xs bg-transparent"
@@ -184,7 +184,7 @@ export default function DashboardPage() {
                     }}
                   >
                     Reavaliar →
-                  </Button>
+                  </Button> */}
                 </div>
               </CardContent>
             </Card>

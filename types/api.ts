@@ -110,7 +110,7 @@ export interface QuestionnaireItem {
 }
 
 export interface QuestionnaireUpdate {
-  prompt: string;
+  content: string;
 }
 
 export interface Evaluation {

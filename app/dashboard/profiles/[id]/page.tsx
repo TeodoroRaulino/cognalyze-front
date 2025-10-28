@@ -1,5 +1,6 @@
 "use client"
 
+import { CognalyzeLoading } from "@/components/cognalyze-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,7 +19,6 @@ import { toast } from "@/hooks/use-toast"
 import { getConditionById } from "@/services/api/condition"
 import { updateQuestionnaire } from "@/services/api/questionnaire"
 import type { ConditionDetails } from "@/types/api"
-import { BarChart3, FileText, Plus } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -32,7 +32,7 @@ export default function ProfileDetailsPage() {
     id: string
     content: string
   } | null>(null)
-  const [editPrompt, setEditPrompt] = useState("")
+  const [editContent, setEditContent] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -56,15 +56,15 @@ export default function ProfileDetailsPage() {
 
   const handleEditQuestionnaire = (questionnaireId: string, content: string) => {
     setEditingQuestionnaire({ id: questionnaireId, content })
-    setEditPrompt("")
+    setEditContent(content)
     setIsEditModalOpen(true)
   }
 
   const handleSubmitEdit = async () => {
-    if (!editingQuestionnaire || !editPrompt.trim()) {
+    if (!editingQuestionnaire || !editContent.trim()) {
       toast({
         title: "Erro",
-        description: "Por favor, insira um prompt para atualização",
+        description: "Por favor, insira o conteúdo do questionário",
         variant: "destructive",
       })
       return
@@ -72,7 +72,7 @@ export default function ProfileDetailsPage() {
 
     setIsSubmitting(true)
     try {
-      await updateQuestionnaire(editingQuestionnaire.id, { prompt: editPrompt })
+      await updateQuestionnaire(editingQuestionnaire.id, { content: editContent })
 
       toast({
         title: "Sucesso",
@@ -82,7 +82,7 @@ export default function ProfileDetailsPage() {
       await fetchConditionDetails()
       setIsEditModalOpen(false)
       setEditingQuestionnaire(null)
-      setEditPrompt("")
+      setEditContent("")
     } catch (error: any) {
       toast({
         title: "Erro ao atualizar",
@@ -103,11 +103,7 @@ export default function ProfileDetailsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">Carregando...</div>
-      </div>
-    )
+    return <CognalyzeLoading size="fullscreen" message="Carregando perfil..." />
   }
 
   if (!condition) {
@@ -128,7 +124,7 @@ export default function ProfileDetailsPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl">{condition.name}</CardTitle>
-                <Button onClick={() => router.push(`/dashboard/profiles/${id}/edit`)}>Editar Perfil</Button>
+                {/* <Button onClick={() => router.push(`/dashboard/profiles/${id}/edit`)}>Editar Perfil</Button> */}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -154,34 +150,6 @@ export default function ProfileDetailsPage() {
         </div>
 
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Ações Rápidas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full justify-start bg-transparent"
-                onClick={() => router.push(`/dashboard/questionnaires?conditionId=${id}`)}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Gerenciar Questionários
-              </Button>
-              <Button variant="outline" className="w-full justify-start bg-transparent" onClick={handleCreateScenario}>
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Novo Cenário
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start bg-transparent"
-                onClick={() => router.push(`/dashboard/evaluations?conditionId=${id}`)}
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Ver Todas Avaliações
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* Questionnaires */}
           <Card>
             <CardHeader>
@@ -206,7 +174,6 @@ export default function ProfileDetailsPage() {
                     />
                   </p>
                   <Button
-                    variant="ghost"
                     size="sm"
                     className="text-xs"
                     onClick={() => handleEditQuestionnaire(questionnaire.id, questionnaire.content)}
@@ -221,41 +188,44 @@ export default function ProfileDetailsPage() {
       </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
             <DialogTitle>Editar Questionário</DialogTitle>
             <DialogDescription>
-              Insira um prompt para atualizar o questionário. O sistema irá processar sua solicitação.
+              Edite o conteúdo do questionário diretamente. Você pode usar Markdown para formatação.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label htmlFor="current-content" className="text-sm font-medium">
-                Conteúdo Atual
-              </label>
-              <div className="p-3 bg-muted rounded-md text-sm max-h-32 overflow-y-auto">
-                <MarkdownRenderer content={editingQuestionnaire?.content || ""} variant="default" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="edit-prompt" className="text-sm font-medium">
-                Prompt de Atualização
+              <label htmlFor="edit-content" className="text-sm font-medium">
+                Conteúdo do Questionário
               </label>
               <Textarea
-                id="edit-prompt"
-                placeholder="Ex: Adicione perguntas sobre navegação por teclado..."
-                value={editPrompt}
-                onChange={(e) => setEditPrompt(e.target.value)}
-                className="min-h-24"
+                id="edit-content"
+                placeholder="Digite o conteúdo do questionário em Markdown..."
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="min-h-[300px] font-mono text-sm"
               />
+              <p className="text-xs text-muted-foreground">
+                Dica: Use Markdown para formatação (ex: **negrito**, *itálico*, # títulos, - listas)
+              </p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Pré-visualização</label>
+              <div className="p-3 bg-muted rounded-md text-sm max-h-48 overflow-y-auto">
+                <MarkdownRenderer content={editContent || "Nenhum conteúdo para pré-visualizar"} variant="default" />
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditModalOpen(false)} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmitEdit} disabled={isSubmitting || !editPrompt.trim()}>
-              {isSubmitting ? "Atualizando..." : "Atualizar"}
+            <Button onClick={handleSubmitEdit} disabled={isSubmitting || !editContent.trim()}>
+              {isSubmitting ? (
+                   <CognalyzeLoading size="fullscreen" message="Salvando..." />
+              ) : "Salvar"}
             </Button>
           </DialogFooter>
         </DialogContent>

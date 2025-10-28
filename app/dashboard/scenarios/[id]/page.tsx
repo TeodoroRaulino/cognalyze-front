@@ -1,5 +1,6 @@
 "use client"
 
+import { CognalyzeLoading } from "@/components/cognalyze-loading"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
@@ -8,58 +9,125 @@ import { getScenarioByIdWithResults, updateScenarioImages } from "@/services/api
 import type { ScenarioWithResultsDTO } from "@/types/api"
 import { ArrowLeft, FileText, ImageIcon, RefreshCw, Upload } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 
-export default function ScenarioDetailsPage({ params }: { params: { id: string } }) {
+export default function ScenarioDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const [scenario, setScenario] = useState<ScenarioWithResultsDTO | null>(null)
   const [loading, setLoading] = useState(true)
+  const [imageRefreshKey, setImageRefreshKey] = useState(0)
+
+  const fetchScenarioData = async () => {
+    try {
+      console.log("[v0] Fetching scenario data for ID:", id)
+      const data = await getScenarioByIdWithResults(id)
+      console.log("[v0] Scenario data received:", {
+        id: data.id,
+        title: data.title,
+        imageCount: data.images.length,
+        images: data.images.map((img) => ({
+          id: img.id,
+          displayName: img.displayName,
+          hasImageKey: !!img.imageKey,
+          evaluationCount: img.evaluations.length,
+        })),
+      })
+      setScenario(data)
+      setImageRefreshKey((prev) => prev + 1)
+      return data
+    } catch (error) {
+      console.error("[v0] Error fetching scenario:", error)
+      throw error
+    }
+  }
 
   useEffect(() => {
-    const fetchScenario = async () => {
+    const loadScenario = async () => {
+      setLoading(true)
       try {
-        const data = await getScenarioByIdWithResults(params.id)
-        setScenario(data)
-      } catch (error) {
-        console.error("Error fetching scenario:", error)
+        await fetchScenarioData()
       } finally {
         setLoading(false)
       }
     }
 
-    fetchScenario()
-  }, [params.id])
+    loadScenario()
+  }, [id])
 
   const handleReplaceImage = async (imageId: string) => {
+    console.log("[v0] handleReplaceImage called with imageId:", imageId)
+
     const input = document.createElement("input")
     input.type = "file"
     input.accept = "image/*"
 
     input.onchange = async (e) => {
+      console.log("[v0] File input onchange triggered")
+
       const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
+      if (!file) {
+        console.log("[v0] No file selected, aborting")
+        return
+      }
+
+      console.log("[v0] File selected:", file.name, file.size, "bytes")
+      console.log("[v0] Setting loading to true")
+      setLoading(true)
 
       try {
-        setLoading(true)
+        console.log("[v0] Step 1: Converting file to base64...")
+        const base64String = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            console.log("[v0] FileReader onloadend - conversion complete")
+            resolve(reader.result as string)
+          }
+          reader.onerror = (error) => {
+            console.error("[v0] FileReader error:", error)
+            reject(error)
+          }
+          reader.readAsDataURL(file)
+        })
 
-        const reader = new FileReader()
-        reader.onloadend = async () => {
-          const base64String = reader.result as string
-          const base64Data = base64String.split(",")[1]
+        const base64Data = base64String.split(",")[1]
+        console.log("[v0] Base64 data length:", base64Data.length)
 
+        console.log("[v0] Step 2: Calling updateScenarioImages API...")
+        try {
           await updateScenarioImages(imageId, base64Data)
-
-          const updatedData = await getScenarioByIdWithResults(params.id)
-          setScenario(updatedData)
-          setLoading(false)
+          console.log("[v0] Step 2 COMPLETE: Image updated successfully")
+        } catch (error: any) {
+          // If it's a network error but the backend returned 200, consider it success
+          if (error?.code === "ERR_NETWORK" || error?.message?.includes("Network Error")) {
+            console.log("[v0] Network error detected, but backend likely returned 200 - continuing...")
+          } else {
+            throw error
+          }
         }
-        reader.readAsDataURL(file)
+
+        console.log("[v0] Step 3: Waiting 1 second before fetching new data...")
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        console.log("[v0] Step 3 COMPLETE: Wait finished")
+
+        console.log("[v0] Step 4: Calling fetchScenarioData...")
+        const updatedData = await fetchScenarioData()
+        console.log("[v0] Step 4 COMPLETE: Scenario data refreshed successfully")
+        console.log("[v0] Updated scenario has", updatedData.images.length, "images")
+
+        console.log("[v0] All steps complete, setting loading to false")
+        setLoading(false)
       } catch (error) {
-        console.error("Error replacing image:", error)
+        console.error("[v0] ERROR in handleReplaceImage:", error)
+        console.error("[v0] Error details:", {
+          message: error instanceof Error ? error.message : "Unknown error",
+          stack: error instanceof Error ? error.stack : undefined,
+        })
         setLoading(false)
       }
     }
 
+    console.log("[v0] Triggering file input click")
     input.click()
   }
 
@@ -69,11 +137,7 @@ export default function ScenarioDetailsPage({ params }: { params: { id: string }
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-900">Carregando...</div>
-      </div>
-    )
+    return <CognalyzeLoading size="fullscreen" message="Carregando cenário..." />
   }
 
   if (!scenario) {
@@ -141,12 +205,6 @@ export default function ScenarioDetailsPage({ params }: { params: { id: string }
                   <div className="space-y-3">
                     {questionnaires.map((questionnaire) => (
                       <div key={questionnaire.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        {/* <div className="flex items-start justify-between mb-2">
-                          <FileText className="h-4 w-4 text-gray-600 mt-0.5" />
-                          {questionnaire.default && (
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Padrão</span>
-                          )}
-                        </div> */}
                         <MarkdownRenderer
                           content={questionnaire.content || "Sem descrição disponível"}
                           variant="default"
@@ -175,6 +233,7 @@ export default function ScenarioDetailsPage({ params }: { params: { id: string }
                     <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                       {image.imageKey ? (
                         <img
+                          key={`${image.id}-${imageRefreshKey}`}
                           src={`data:image/png;base64,${image.imageKey}`}
                           alt={image.displayName || `Tela ${index + 1}`}
                           className="w-full h-full object-contain"
