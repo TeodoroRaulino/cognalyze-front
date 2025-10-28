@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getConditions } from "@/services/api/condition";
 import { getScenarios } from "@/services/api/scenario";
 import { Plus } from "lucide-react";
@@ -80,27 +81,40 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-semibold mb-6 text-gray-900">
-          Perfis de acessibilidade
+          Personas
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <TooltipProvider>
           {conditions.map((condition) => (
             <Card
               key={condition.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() =>
-                router.push(`/dashboard/profiles/${condition.id}`)
-              }
+              onClick={() => router.push(`/dashboard/profiles/${condition.id}`)}
             >
               <CardContent className="p-6 text-center">
-                <h3 className="font-medium text-gray-900">{condition.name}</h3>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <h3 className="font-medium text-gray-900 line-clamp-2">{condition.name}</h3>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">{condition.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+
                 {condition.description && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    {condition.description}
-                  </p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-3">{condition.description}</p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-sm">{condition.description}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </CardContent>
             </Card>
           ))}
+          </TooltipProvider>
 
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow border-dashed"
@@ -109,7 +123,7 @@ export default function DashboardPage() {
             <CardContent className="p-6 text-center flex flex-col items-center justify-center">
               <Plus className="h-8 w-8 text-gray-400 mb-2" />
               <span className="text-gray-600">
-                Adicionar Perfil de Acessibilidade
+                Adicionar uma nova persona
               </span>
             </CardContent>
           </Card>
@@ -119,16 +133,35 @@ export default function DashboardPage() {
       <div>
         <h2 className="text-xl font-semibold mb-6 text-gray-900">Cenários</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <TooltipProvider>
           {scenarios.map((scenario) => (
             <Card
               key={scenario.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => router.push(`/dashboard/profiles/${scenario.id}`)}
             >
-              <CardContent className="p-4">
-                <p className="text-xs text-gray-600 mb-1">Descrição</p>
-                <p className="text-xs text-gray-600 mb-3">
-                  {scenario.description?.substring(0, 20)}...
-                </p>
+              <CardContent className="p-6">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <h3 className="font-medium text-gray-900 line-clamp-2">{scenario.title}</h3>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">{scenario.title}</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {scenario.description && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-3">Descrição: {scenario.description}</p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-sm">{scenario.description}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
                 <div className="space-y-1">
                   <Button
                     size="sm"
@@ -136,7 +169,7 @@ export default function DashboardPage() {
                     className="w-full text-xs bg-transparent"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/dashboard/results/${scenario.id}`);
+                      router.push(`/dashboard/scenarios/${scenario.id}`);
                     }}
                   >
                     Ver resultado →
@@ -156,6 +189,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           ))}
+          </TooltipProvider>
 
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow border-dashed"

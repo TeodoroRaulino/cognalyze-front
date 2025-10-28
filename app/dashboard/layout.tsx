@@ -55,6 +55,13 @@ export default function DashboardLayout({
             <Button
               variant="ghost"
               className="text-gray-700 hover:text-gray-900"
+              onClick={() => router.push("/dashboard/docs")}
+            >
+              Documentação
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-gray-700 hover:text-gray-900"
               onClick={handleSignOut}
             >
               Sair

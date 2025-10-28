@@ -1,4 +1,4 @@
-import { Condition, ConditionCreate, ConditionDetails } from "@/types/api";
+import { Condition, ConditionCreate, ConditionCreateResponse, ConditionDetails } from "@/types/api";
 import api from "../api";
 
 export const getConditionById = async (id: string): Promise<ConditionDetails> => {
@@ -11,7 +11,7 @@ export const getConditions = async (): Promise<Condition[]> => {
   return response.data;
 };
 
-export const createCondition = async (data: ConditionCreate) => {
+export const createCondition = async (data: ConditionCreate): Promise<ConditionCreateResponse> => {
   const response = await api.post("/condition", data);
   return response.data;
 };

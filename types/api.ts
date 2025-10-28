@@ -5,6 +5,8 @@ export interface Condition {
   guidelines: string;
   createdAt?: string;
   updatedAt?: string;
+  defaultQuestionaireId?: string;
+  defaultQuestionnaireContent?: string;
 }
 
 export interface ConditionDetails {
@@ -12,12 +14,16 @@ export interface ConditionDetails {
   name: string
   description: string
   guidelines: string
-  totalScenarios: number
   questionnaires: Questionnaire[]
-  scenarios: Scenario[]
 }
 
 export interface ConditionCreate {
+  name: string;
+  description: string;
+}
+
+export interface ConditionCreateResponse {
+  id: string;
   name: string;
   description: string;
 }
@@ -50,6 +56,40 @@ export interface ScenarioCreate {
   s3Keys: string[];
 }
 
+export interface ScenarioWithResultsDTO {
+  id: string
+  title: string
+  description: string
+  userId: string
+  images: ScenarioImageResultDTO[]
+  questionnaires?: Questionnaire[]
+}
+
+export interface ScenarioImageResultDTO {
+  id: string
+  displayName?: string
+  imageKey: string 
+  evaluations: ImageEvaluationResultDTO[]
+}
+
+export interface ImageEvaluationResultDTO {
+  evaluationId: string
+  questionnaireId: string
+  questionnaireLabel?: string
+  status: EvaluationStatus
+  failureReason?: string
+  message?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export enum EvaluationStatus {
+  Pending = "Pending",
+  InProgress = "InProgress",
+  Completed = "Completed",
+  Failed = "Failed",
+}
+
 export interface Questionnaire {
   id: string;
   conditionId: string;
@@ -67,6 +107,10 @@ export interface QuestionnaireItem {
   category?: string;
   required?: boolean;
   order?: number;
+}
+
+export interface QuestionnaireUpdate {
+  prompt: string;
 }
 
 export interface Evaluation {

@@ -41,17 +41,18 @@ export default function CreateProfilePage() {
       //   return;
       // }
 
-     await createCondition({
+     var response = await createCondition({
       name: formData.name,
       description: formData.description,
      });
+
 
       toast({
         title: "Sucesso",
         description: "Perfil criado com sucesso!",
       });
 
-      router.push("/profiles");
+     router.push(`/dashboard/profiles/${response.id}`);
     } catch (error) {
       toast({
         title: "Erro",
@@ -64,37 +65,18 @@ export default function CreateProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex justify-between items-center max-w-6xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => router.back()}>
-              Voltar
-            </Button>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => router.push("/")}>
-              Home
-            </Button>
-            <Button variant="ghost" onClick={() => router.push("/login")}>
-              Sair
-            </Button>
-          </div>
-        </div>
-      </div>
 
-      {/* Content */}
       <div className="max-w-2xl mx-auto p-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-center">
-              Adicionar um Perfil de Acessibilidade
+              Adicionar uma nova persona
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="name">Definição do Perfil</Label>
+                <Label htmlFor="name" className="pb-1">Nome da persona</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -107,7 +89,7 @@ export default function CreateProfilePage() {
               </div>
 
               <div>
-                <Label htmlFor="description">Descrição</Label>
+                <Label htmlFor="description" className="pb-1">Descrição da persona</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -117,7 +99,7 @@ export default function CreateProfilePage() {
                       description: e.target.value,
                     }))
                   }
-                  placeholder="Descrição do perfil"
+                  placeholder="Descreva contexto, desafios, necessidades e forças da personas"
                   rows={4}
                 />
               </div>
@@ -129,6 +111,5 @@ export default function CreateProfilePage() {
           </CardContent>
         </Card>
       </div>
-    </div>
   );
 }

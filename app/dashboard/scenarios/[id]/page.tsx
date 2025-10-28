@@ -1,275 +1,253 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { toast } from "@/hooks/use-toast"
-import { Skeleton } from "@/components/ui/skeleton"
-
-interface Scenario {
-  id: string
-  title: string
-  description: string
-  conditionId: string
-  questionnaireId: string
-}
-
-interface Evaluation {
-  id: string
-  scenarioId: string
-  status: string
-  createdAt: string
-}
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { getScenarioByIdWithResults, updateScenarioImages } from "@/services/api/scenario"
+import type { ScenarioWithResultsDTO } from "@/types/api"
+import { ArrowLeft, FileText, ImageIcon, RefreshCw, Upload } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export default function ScenarioDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [scenario, setScenario] = useState<Scenario | null>(null)
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([])
+  const [scenario, setScenario] = useState<ScenarioWithResultsDTO | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchScenario()
-    fetchEvaluations()
-  }, [])
-
-  const fetchScenario = async () => {
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        router.push("/login")
-        return
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/Scenarios/${params.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (response.status === 401) {
-        router.push("/login")
-        return
-      }
-
-      if (response.ok) {
-        const data = await response.json()
+    const fetchScenario = async () => {
+      try {
+        const data = await getScenarioByIdWithResults(params.id)
         setScenario(data)
+      } catch (error) {
+        console.error("Error fetching scenario:", error)
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar o cenário",
-        variant: "destructive",
-      })
     }
+
+    fetchScenario()
+  }, [params.id])
+
+  const handleReplaceImage = async (imageId: string) => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = "image/*"
+
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      try {
+        setLoading(true)
+
+        const reader = new FileReader()
+        reader.onloadend = async () => {
+          const base64String = reader.result as string
+          const base64Data = base64String.split(",")[1]
+
+          await updateScenarioImages(imageId, base64Data)
+
+          const updatedData = await getScenarioByIdWithResults(params.id)
+          setScenario(updatedData)
+          setLoading(false)
+        }
+        reader.readAsDataURL(file)
+      } catch (error) {
+        console.error("Error replacing image:", error)
+        setLoading(false)
+      }
+    }
+
+    input.click()
   }
 
-  const fetchEvaluations = async () => {
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        router.push("/login")
-        return
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/Evaluations/by-scenario/${params.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (response.status === 401) {
-        router.push("/login")
-        return
-      }
-
-      if (response.ok) {
-        const data = await response.json()
-        setEvaluations(data)
-      }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as avaliações",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleStartEvaluation = async () => {
-    if (!scenario) return
-
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        router.push("/login")
-        return
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/Evaluations`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          scenarioId: scenario.id,
-          questionnaireId: scenario.questionnaireId,
-        }),
-      })
-
-      if (response.status === 401) {
-        router.push("/login")
-        return
-      }
-
-      if (response.status === 201) {
-        const evaluation = await response.json()
-        router.push(`/evaluations/${evaluation.id}`)
-      }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível iniciar a avaliação",
-        variant: "destructive",
-      })
-    }
+  const handleAddNewImage = () => {
+    console.log("[v0] Add new image to scenario")
+    // TODO: Implementar lógica de adicionar nova imagem
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex justify-between items-center max-w-6xl mx-auto">
-            <Skeleton className="h-8 w-20" />
-            <div className="flex gap-4">
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="h-8 w-12" />
-            </div>
-          </div>
-        </div>
-        <div className="max-w-4xl mx-auto p-6">
-          <Skeleton className="h-64 w-full" />
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-900">Carregando...</div>
       </div>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex justify-between items-center max-w-6xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => router.back()}>
-              Voltar
-            </Button>
-            <h1 className="text-lg font-semibold">{scenario?.title || "Cenário"}</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => router.push("/")}>
-              Home
-            </Button>
-            <Button variant="ghost" onClick={() => router.push("/login")}>
-              Sair
-            </Button>
-          </div>
-        </div>
+  if (!scenario) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-900">Cenário não encontrado</div>
       </div>
+    )
+  }
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto p-6">
+  const questionnaires = scenario.questionnaires || []
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <Button variant="ghost" onClick={() => router.push("/dashboard")} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Detalhes do Cenário</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {scenario && (
-                  <>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">Título</Label>
-                      <p className="mt-1">{scenario.title}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">Descrição</Label>
-                      <p className="mt-1 text-gray-700">{scenario.description}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">ID do Cenário</Label>
-                      <p className="mt-1 font-mono text-sm break-all">{scenario.id}</p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+          {/* Informações do Cenário */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Informações do Cenário
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Título</h3>
+                <p className="text-lg font-semibold text-gray-900">{scenario.title}</p>
+              </div>
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Histórico de Avaliações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {evaluations.length > 0 ? (
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Descrição</h3>
+                <p className="text-gray-700">{scenario.description}</p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <ImageIcon className="h-5 w-5 text-gray-500" />
+                <span className="text-sm text-gray-600">
+                  <span className="font-semibold text-gray-900">{scenario.images.length}</span> tela
+                  {scenario.images.length !== 1 ? "s" : ""} cadastrada{scenario.images.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+
+              <div className="pt-4">
+                <Button onClick={handleAddNewImage} className="w-full">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Adicionar Novas Telas
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Questionários Atrelados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {questionnaires.length > 0 ? (
+                <ScrollArea className="h-[400px] pr-4">
                   <div className="space-y-3">
-                    {evaluations.map((evaluation) => (
-                      <div key={evaluation.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-sm">Avaliação {evaluation.id.substring(0, 8)}...</p>
-                          <p className="text-xs text-gray-600">
-                            {new Date(evaluation.createdAt).toLocaleDateString("pt-BR")}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">{evaluation.status}</Badge>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => router.push(`/evaluations/${evaluation.id}/results`)}
-                          >
-                            Ver Resultados
-                          </Button>
-                        </div>
+                    {questionnaires.map((questionnaire) => (
+                      <div key={questionnaire.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        {/* <div className="flex items-start justify-between mb-2">
+                          <FileText className="h-4 w-4 text-gray-600 mt-0.5" />
+                          {questionnaire.default && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Padrão</span>
+                          )}
+                        </div> */}
+                        <MarkdownRenderer
+                          content={questionnaire.content || "Sem descrição disponível"}
+                          variant="default"
+                          className="text-gray-700"
+                        />
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-4">Nenhuma avaliação encontrada</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </ScrollArea>
+              ) : (
+                <p className="text-sm text-gray-500">Nenhum questionário atrelado</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Ações</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full" onClick={handleStartEvaluation}>
-                  Iniciar Nova Avaliação
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full bg-transparent"
-                  onClick={() => router.push(`/scenarios/${params.id}/edit`)}
-                >
-                  Editar Cenário
-                </Button>
-                <Button variant="outline" className="w-full bg-transparent" onClick={() => router.push("/scenarios")}>
-                  Voltar aos Cenários
-                </Button>
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">Telas do Cenário</h2>
+
+          {scenario.images.map((image, index) => (
+            <Card key={image.id}>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Imagem */}
+                  <div className="space-y-3">
+                    <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                      {image.imageKey ? (
+                        <img
+                          src={`data:image/png;base64,${image.imageKey}`}
+                          alt={image.displayName || `Tela ${index + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="h-12 w-12 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full bg-transparent"
+                      onClick={() => handleReplaceImage(image.id)}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Substituir Tela
+                    </Button>
+                  </div>
+
+                  {/* Avaliações */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900">{image.displayName || `Tela ${index + 1}`}</h3>
+
+                    {image.evaluations.length > 0 ? (
+                      <div className="space-y-4">
+                        {image.evaluations.map((evaluation) => (
+                          <div key={evaluation.evaluationId} className="space-y-2">
+                            <ScrollArea className="h-[400px] pr-4">
+                              {evaluation.message && (
+                                <div className="prose prose-sm max-w-none bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                  <MarkdownRenderer
+                                    content={evaluation.message || "Sem descrição disponível"}
+                                    variant="default"
+                                    className="text-gray-700"
+                                  />
+                                </div>
+                              )}
+                            </ScrollArea>
+
+                            {evaluation.failureReason && (
+                              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+                                {evaluation.failureReason}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">Nenhuma avaliação disponível</p>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          </div>
+          ))}
+
+          <Card
+            className="border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors cursor-pointer"
+            onClick={handleAddNewImage}
+          >
+            <CardContent className="p-12">
+              <div className="flex flex-col items-center justify-center text-center space-y-3">
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                  <Upload className="h-8 w-8 text-gray-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Adicionar Nova Tela</h3>
+                  <p className="text-sm text-gray-500">Clique para fazer upload de uma nova tela para este cenário</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
