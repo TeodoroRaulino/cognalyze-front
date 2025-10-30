@@ -33,6 +33,7 @@ export default function DocumentationPage() {
         "configuracao",
         "imagens",
         "gerenciar",
+        "processo-avaliacao",
         "melhores-praticas",
       ]
 
@@ -81,6 +82,7 @@ export default function DocumentationPage() {
     { id: "configuracao", label: "2. Configuração", indent: true },
     { id: "imagens", label: "3. Adicionar Imagens", indent: true },
     { id: "gerenciar", label: "4. Gerenciar e Avaliar", indent: true },
+    { id: "processo-avaliacao", label: "Processo de Avaliação", indent: true },
     { id: "melhores-praticas", label: "Melhores Práticas" },
   ]
 
@@ -636,6 +638,201 @@ export default function DocumentationPage() {
                         </span>
                       </li>
                     </ul>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card id="processo-avaliacao" className="border-2 border-accent/30 bg-accent/5 scroll-mt-20">
+                <CardHeader>
+                  <div className="flex items-start gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent text-accent-foreground shrink-0">
+                      <Settings className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-2xl mb-2">Como funciona o Processo de Avaliação</CardTitle>
+                      <CardDescription className="text-base">
+                        Entenda como avaliamos múltiplas imagens e consolidamos os resultados
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <p className="text-muted-foreground leading-relaxed">
+                    Quando você adiciona múltiplas imagens a um cenário, cada uma é avaliada individualmente pela
+                    inteligência artificial. Depois, consolidamos todos os resultados em um diagnóstico único que
+                    identifica padrões e prioriza correções.
+                  </p>
+
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="font-semibold text-foreground text-lg mb-4">Avaliação Individual por Imagem</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
+                            1
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Análise Separada</p>
+                            <p className="text-muted-foreground text-sm">
+                              Cada imagem do cenário é avaliada separadamente pela IA, usando o mesmo questionário
+                              gerado para a persona selecionada.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
+                            2
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Pontuação por Critério</p>
+                            <p className="text-muted-foreground text-sm mb-2">
+                              Para cada imagem, a IA retorna uma avaliação detalhada com pontuações de 1 a 5 para cada
+                              critério:
+                            </p>
+                            <div className="bg-muted/50 border border-border rounded-lg p-3 font-mono text-sm">
+                              <p className="text-foreground">1. Contraste do Texto: 5</p>
+                              <p className="text-foreground">2. Uso de Cor com Sinais Redundantes: 3</p>
+                              <p className="text-foreground">3. Clareza de Ícones: 4</p>
+                              <p className="text-muted-foreground">...</p>
+                              <p className="text-foreground mt-2">Resumo Executivo: [análise detalhada]</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
+                            3
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Armazenamento</p>
+                            <p className="text-muted-foreground text-sm">
+                              Cada resposta é salva como <code className="text-foreground">EvaluationResponse</code>,
+                              vinculada à imagem específica. Isso permite visualizar o detalhe de cada tela
+                              individualmente.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-6">
+                      <h4 className="font-semibold text-foreground text-lg mb-4">Consolidação dos Resultados</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
+                            1
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Agregação de Dados</p>
+                            <p className="text-muted-foreground text-sm">
+                              Após avaliar todas as imagens, o sistema coleta todas as respostas daquela mesma avaliação
+                              e extrai as notas de cada critério.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
+                            2
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Identificação de Padrões</p>
+                            <p className="text-muted-foreground text-sm">
+                              A IA (ou código de agregação) identifica problemas e pontos positivos que se repetem em
+                              múltiplas imagens. Por exemplo, se várias telas apresentam falta de "sinais redundantes"
+                              ou "contraste de ícones baixo".
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
+                            3
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Diagnóstico Único</p>
+                            <p className="text-muted-foreground text-sm mb-2">
+                              Um diagnóstico consolidado é gerado, contendo:
+                            </p>
+                            <ul className="space-y-1 text-muted-foreground text-sm ml-4">
+                              <li>
+                                • <strong className="text-foreground">Média geral</strong> das pontuações de todas as
+                                telas
+                              </li>
+                              <li>
+                                • <strong className="text-foreground">Critérios mais problemáticos</strong> que tiveram
+                                pontuações baixas
+                              </li>
+                              <li>
+                                • <strong className="text-foreground">Problemas recorrentes</strong> que apareceram em
+                                mais de uma imagem
+                              </li>
+                              <li>
+                                • <strong className="text-foreground">Prioridades de correção</strong> ordenadas por
+                                impacto e frequência
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
+                            4
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Armazenamento do Resumo</p>
+                            <p className="text-muted-foreground text-sm">
+                              O diagnóstico consolidado é salvo diretamente na{" "}
+                              <code className="text-foreground">Evaluation</code> (campo{" "}
+                              <code className="text-foreground">SummaryContent</code>), não nas imagens individuais.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-5">
+                      <h5 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-primary" />
+                        Resultado Final
+                      </h5>
+                      <p className="text-sm text-muted-foreground">
+                        O cenário continua mostrando o <strong>detalhe por imagem</strong> (cada{" "}
+                        <code>EvaluationResponse</code>), permitindo que você veja problemas específicos de cada tela.
+                        Ao mesmo tempo, a <strong>avaliação consolidada</strong> mostra o{" "}
+                        <strong>resumo geral do cenário</strong>, facilitando a identificação de padrões sistêmicos e a
+                        priorização de melhorias que terão maior impacto na acessibilidade do projeto como um todo.
+                      </p>
+                    </div>
+
+                    <div className="bg-muted/50 border border-border rounded-lg p-5">
+                      <h5 className="font-semibold text-foreground mb-3">Exemplo de Consolidação</h5>
+                      <div className="space-y-3 text-sm">
+                        <div>
+                          <p className="font-medium text-foreground mb-1">Cenário: "Fluxo de Checkout"</p>
+                          <p className="text-muted-foreground">
+                            5 imagens avaliadas (carrinho, endereço, pagamento, confirmação, sucesso)
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground mb-1">Padrões Identificados:</p>
+                          <ul className="space-y-1 text-muted-foreground ml-4">
+                            <li>• Contraste de ícones baixo em 4 de 5 telas (média: 2.2)</li>
+                            <li>• Falta de sinais redundantes além da cor em 3 telas</li>
+                            <li>• Instruções claras presentes em todas as telas (média: 4.8)</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground mb-1">Prioridade de Correção:</p>
+                          <p className="text-muted-foreground">
+                            1º Melhorar contraste de ícones (impacto alto, presente em 80% das telas)
+                            <br />
+                            2º Adicionar indicadores visuais além da cor (impacto médio, presente em 60% das telas)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
