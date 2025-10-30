@@ -150,6 +150,10 @@ export default function ScenarioDetailsPage({ params }: { params: Promise<{ id: 
 
   const questionnaires = scenario.questionnaires || []
 
+  const summaryContent = scenario.images
+    .flatMap((image) => image.evaluations)
+    .find((evaluation) => evaluation.summaryContent)?.summaryContent
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -220,6 +224,22 @@ export default function ScenarioDetailsPage({ params }: { params: Promise<{ id: 
             </CardContent>
           </Card>
         </div>
+
+        {summaryContent && (
+          <Card className="border-blue-200 bg-blue-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-900">
+                <FileText className="h-5 w-5" />
+                Diagnóstico Consolidado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none">
+                <MarkdownRenderer content={summaryContent} variant="default" className="text-gray-800" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">Telas do Cenário</h2>

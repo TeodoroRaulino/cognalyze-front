@@ -81,6 +81,9 @@ export interface ImageEvaluationResultDTO {
   message?: string
   createdAt: string
   updatedAt: string
+
+  summaryContent?: string | null;
+  summaryUpdatedAt?: string | null;
 }
 
 export enum EvaluationStatus {
