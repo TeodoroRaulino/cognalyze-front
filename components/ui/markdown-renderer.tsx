@@ -1,7 +1,7 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-import React from "react"
+import { cn } from "@/lib/utils";
+import React from "react";
 import type { JSX } from "react/jsx-runtime"; // Import JSX to fix the undeclared variable error
 
 interface MarkdownRendererProps {
@@ -19,6 +19,23 @@ export function MarkdownRenderer({ content, className, variant = "default" }: Ma
     const elements: JSX.Element[] = []
     let currentList: string[] = []
     let listType: "ul" | "ol" | null = null
+
+    const parseTableRow = (row: string) => {
+      const cells = row.trim().split("|")
+      if (cells.length > 0 && cells[0].trim() === "") {
+        cells.shift()
+      }
+      if (cells.length > 0 && cells[cells.length - 1].trim() === "") {
+        cells.pop()
+      }
+      return cells.map((cell) => cell.trim())
+    }
+
+    const isSeparatorRow = (row: string) => {
+      const cells = parseTableRow(row)
+      if (cells.length === 0) return false
+      return cells.every((cell) => /^:?-{3,}:?$/.test(cell))
+    }
 
     const flushList = () => {
       if (currentList.length > 0 && listType) {
@@ -44,8 +61,70 @@ export function MarkdownRenderer({ content, className, variant = "default" }: Ma
       }
     }
 
-    lines.forEach((line, index) => {
+    for (let index = 0; index < lines.length; index++) {
+      const line = lines[index]
       const trimmed = line.trim()
+
+      if (trimmed.includes("|") && index + 1 < lines.length && isSeparatorRow(lines[index + 1])) {
+        flushList()
+        const headerCells = parseTableRow(line)
+        const separatorCells = parseTableRow(lines[index + 1])
+        const alignments = separatorCells.map((cell) => {
+          const starts = cell.startsWith(":")
+          const ends = cell.endsWith(":")
+          if (starts && ends) return "center"
+          if (ends) return "right"
+          if (starts) return "left"
+          return "left"
+        })
+        const bodyRows: string[][] = []
+        index += 2
+        while (index < lines.length) {
+          const rowLine = lines[index]
+          if (!rowLine.trim() || !rowLine.includes("|")) {
+            break
+          }
+          bodyRows.push(parseTableRow(rowLine))
+          index += 1
+        }
+        index -= 1
+
+        elements.push(
+          <div key={`table-${index}`} className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr>
+                  {headerCells.map((cell, cellIndex) => (
+                    <th
+                      key={`th-${cellIndex}`}
+                      className="border border-gray-200 bg-gray-50 px-3 py-2 text-left font-semibold text-gray-800"
+                      style={{ textAlign: alignments[cellIndex] || "left" }}
+                    >
+                      {parseInlineMarkdown(cell)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {bodyRows.map((row, rowIndex) => (
+                  <tr key={`tr-${rowIndex}`}>
+                    {row.map((cell, cellIndex) => (
+                      <td
+                        key={`td-${rowIndex}-${cellIndex}`}
+                        className="border border-gray-200 px-3 py-2 text-gray-700"
+                        style={{ textAlign: alignments[cellIndex] || "left" }}
+                      >
+                        {parseInlineMarkdown(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>,
+        )
+        continue
+      }
 
       // Headers
       if (trimmed.startsWith("# ")) {
@@ -145,7 +224,7 @@ export function MarkdownRenderer({ content, className, variant = "default" }: Ma
         flushList()
         elements.push(<div key={index} className="h-2" />)
       }
-    })
+    }
 
     flushList() // Flush any remaining list
     return elements
