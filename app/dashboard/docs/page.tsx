@@ -383,8 +383,13 @@ export default function DocumentationPage() {
                       <div>
                         <p className="font-medium text-foreground text-sm mb-1">1 (Crítico/Não atende)</p>
                         <p className="text-muted-foreground text-sm">
-                          Falhas graves que impedem a compreensão; viola a(s) referência(s) WCAG indicada(s) e contraria
-                          o COGA.
+                          Falhas graves que comprometem a compreensão da interface, caracterizando uma violação das diretrizes associadas.
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm mb-1">2 (Atende Insuficientemente)</p>
+                        <p className="text-muted-foreground text-sm">
+                          Há tentativas pontuais de atender ao critério, porém de forma incipiente ou inadequada, aproximando-se mais de uma falha crítica do que de um atendimento parcial.
                         </p>
                       </div>
                       <div>
@@ -392,6 +397,12 @@ export default function DocumentationPage() {
                         <p className="text-muted-foreground text-sm">
                           Há progresso visível, mas persistem obstáculos cognitivos relevantes; atende parcialmente à(s)
                           WCAG; COGA aplicado de forma inconsistente.
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm mb-1">4 (Atende Adequadamente)</p>
+                        <p className="text-muted-foreground text-sm">
+                          O critério é majoritariamente atendido, restando apenas ajustes pontuais que impedem sua classificação como atendimento pleno.
                         </p>
                       </div>
                       <div>
